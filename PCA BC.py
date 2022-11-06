@@ -15,7 +15,7 @@ from matplotlib.dates import date2num
 from reportlab.lib.pagesizes import letter, landscape
 
 location = '/Users/User/Desktop/Practice Python'
-dateToday = datetime.today()
+dateToday = datetime.today()-relativedelta(months=1)
 
 def end_of_month(dates):
     delta_m = relativedelta(months=1)
@@ -123,6 +123,7 @@ norm_adj_exports.columns = ['Exports']
 earnings = pdr.get_data_fred('USAHOUREAMISMEI', start='1960-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
 earnings = earnings.resample('M').last()
 adj_earnings = np.log(earnings).diff()
+adj_earnings = fix_dates(adj_earnings)
 norm_adj_earnings = zscore(adj_earnings)
 norm_adj_earnings.columns = ['Hourly Earnings']
 
@@ -137,6 +138,7 @@ norm_adj_cpi.columns = ['CPI']
 #Manufacturing Confidence
 man_conf = pdr.get_data_fred('BSCICP03USM665S', start='1960-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
 adj_man_conf = man_conf.resample('M').last()
+adj_man_conf = fix_dates(adj_man_conf)
 norm_adj_man_conf = zscore(adj_man_conf)
 norm_adj_man_conf.columns = ['Manufacturing Confidence']
 
@@ -498,6 +500,7 @@ vars=[norm_adj_participation_rate, norm_adj_prime_rate, norm_adj_consumer_credit
     norm_adj_cpi, norm_adj_earnings, norm_adj_exports, norm_adj_imports, norm_adj_bus_loans, norm_adj_part_time,
     norm_adj_trans_receipt, nomr_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
 
+
 for n in vars:
     df=df.join(n,how='outer') 
 df = df.dropna()
@@ -511,7 +514,6 @@ for col in pc.columns:
 pc = pc.ewm(halflife=1.5,min_periods=3).mean()
 x = pca_bc.explained_variance_ratio_
 print(f'Explained variation per principal component: {x}. Total explanatory power is {sum(x)}')
-
 
 pc['BC'] = -pc['PC1']/3 + pc['PC2']/6 + -pc['PC3']/2
 pc['BC'] = sp.norm.cdf(pc['BC'], 0)
@@ -1003,9 +1005,3 @@ elif tr_1 == False:
 
 pdf.save()
 print('Done')
-
-
-
-
-recessions = pdr.get_data_fred('USREC', start='1900-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
-recessions = recessions.resample('M').last()
