@@ -7,15 +7,12 @@ from reportlab.lib.colors import red, blue, white, black, grey, green, greenyell
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as ticker
-import matplotlib.dates as mdates
-from matplotlib.patches import Rectangle
 import scipy.stats as sp
 from sklearn.decomposition import PCA
 from matplotlib.dates import date2num
-from reportlab.lib.pagesizes import letter, landscape
 
 location = '/Users/User/Desktop/Practice Python'
-dateToday = datetime.today()-relativedelta(months=1)
+dateToday = datetime.today()
 
 def end_of_month(dates):
     delta_m = relativedelta(months=1)
@@ -184,6 +181,7 @@ norm_adj_beef.columns = ['Ground Beef']
 crude = pdr.get_data_fred('WTISPLC', start='1946-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
 crude = crude.resample('M').last()
 adj_crude = np.log(crude).diff()
+adj_crude = fix_dates(adj_crude)
 norm_adj_crude = zscore(adj_crude)
 norm_adj_crude.columns = ['WTI Crude']
 
@@ -501,6 +499,7 @@ vars=[norm_adj_participation_rate, norm_adj_prime_rate, norm_adj_consumer_credit
     norm_adj_trans_receipt, nomr_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
 
 
+
 for n in vars:
     df=df.join(n,how='outer') 
 df = df.dropna()
@@ -679,7 +678,7 @@ plt.show()
 # =============================================================================
 #                     Output 
 # =============================================================================
-pdf = canvas.Canvas(f'/Users/User/Desktop/Practice Python/Business Cycle Monthly Report - {(dateToday - relativedelta(months=1)).strftime("%b")} {(dateToday- relativedelta(months=1)).year}.pdf')
+pdf = canvas.Canvas(f'/Users/User/Desktop/Practice Python/Business Cycle Monthly Report {(dateToday - relativedelta(months=1)).strftime("%m")}-{(dateToday- relativedelta(months=1)).year}.pdf')
 pdf.setTitle('Business Cycle Monthly Report')
 
 pdf.setFillColorRGB(0.1,0.05,0.55)
