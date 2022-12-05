@@ -585,7 +585,7 @@ def get_sector_etf_rets(tickers, sector_names, start):
     data = []
     for etf, name in zip(tickers, sector_names):
         price = pdr.get_data_yahoo(etf, start=start, end=str(dateToday))['Adj Close']
-        price = price.resample('M').last()
+        price = price.resample('M').last().shift(periods=-1).dropna()
         rets = price.pct_change().dropna()
         rets = pd.DataFrame({name:rets})
         data.append(rets)
@@ -610,6 +610,7 @@ for phase in phases.columns:
     phase_rets.append(phase_ir)
     print('Still thinking...')
 phase_rets = phase_rets[0].join(phase_rets[1:])
+
 
 def ir_charts(phases_bc, top_bottom):
     fig = plt.figure(figsize=[11,9])
