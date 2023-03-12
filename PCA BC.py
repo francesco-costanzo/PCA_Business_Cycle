@@ -10,9 +10,10 @@ import matplotlib.ticker as ticker
 import scipy.stats as sp
 from sklearn.decomposition import PCA
 from matplotlib.dates import date2num
+import yfinance as yf
 
 location = '/Users/User/Desktop/Practice Python'
-dateToday = datetime.today()
+dateToday = date.today()
 
 def end_of_month(dates):
     delta_m = relativedelta(months=1)
@@ -91,6 +92,7 @@ norm_adj_trans_receipt.columns = ['Net Transfer Receipts']
 part_time = pdr.get_data_fred('LNS12032198', start='1955-05-01', end=end_of_month(dateToday - relativedelta(months=1)))
 part_time = part_time.resample('M').last()
 adj_part_time = np.log(part_time).diff()
+adj_part_time = fix_dates(adj_part_time)
 norm_adj_part_time = zscore(adj_part_time)
 norm_adj_part_time.columns = ['Part-Time Employees']
 
@@ -483,9 +485,49 @@ adj_participation_rate = participation_rate.diff()
 norm_adj_participation_rate = zscore(adj_participation_rate)
 norm_adj_participation_rate.columns = ['Participation Rate']
 
+#Home Prices
+home = pdr.get_data_fred('CSUSHPINSA', start='1987-03-01', end=end_of_month(dateToday - relativedelta(months=1)))
+home = home.resample('M').last()
+adj_home = np.log(home).diff()
+adj_home = fix_dates(adj_home)
+norm_adj_home = zscore(adj_home)
+norm_adj_home.columns = ['Home Prices']
+
+#Policy Uncertainty (Survey)
+policy = pdr.get_data_fred('USEPUINDXD', start='1985-03-01', end=end_of_month(dateToday - relativedelta(months=1)))
+policy = policy.resample('M').last()
+adj_policy = policy.diff()
+adj_policy = fix_dates(adj_policy)
+norm_adj_policy = zscore(adj_policy)
+norm_adj_policy.columns = ['Policy Uncertainty']
+
+#VIX
+vix = pdr.get_data_fred('EMVOVERALLEMV', start='1985-03-01', end=end_of_month(dateToday - relativedelta(months=1)))
+vix = vix.resample('M').last()
+adj_vix = vix.diff()
+adj_vix = fix_dates(adj_vix)
+norm_adj_vix = zscore(adj_vix)
+norm_adj_vix.columns = ['VIX']
+
+#Sticky Prices
+sticky = pdr.get_data_fred('STICKCPIM157SFRBATL', start='1985-03-01', end=end_of_month(dateToday - relativedelta(months=1)))
+sticky = sticky.resample('M').last()
+adj_sticky = sticky.diff()
+adj_sticky = fix_dates(adj_sticky)
+norm_adj_sticky = zscore(adj_sticky)
+norm_adj_sticky.columns = ['Sticky CPI']
+
+#Consumer Sentiment
+sentiment = pdr.get_data_fred('UMCSENT', start='1979-03-01', end=end_of_month(dateToday - relativedelta(months=1)))
+sentiment = sentiment.resample('M').last()
+adj_sentiment = sentiment.diff()
+adj_sentiment = fix_dates(adj_sentiment)
+norm_adj_sentiment = zscore(adj_sentiment)
+norm_adj_sentiment.columns = ['Consumer Sentiment']
+
 
 df = pd.DataFrame()
-vars=[norm_adj_participation_rate, norm_adj_prime_rate, norm_adj_consumer_credit, norm_adj_m2, norm_adj_slope,
+vars=[norm_adj_sentiment, norm_adj_sticky, norm_adj_vix, norm_adj_policy, norm_adj_home, norm_adj_participation_rate, norm_adj_prime_rate, norm_adj_consumer_credit, norm_adj_m2, norm_adj_slope,
     norm_adj_slope_chg, norm_adj_consumer_orders, norm_adj_capital_orders, norm_adj_new_orders, norm_adj_wholesale_inv_to_sales,
     norm_adj_man_inv_to_sales, norm_adj_inv_to_sales, norm_adj_real_sales, norm_adj_retailfood_sales,
     norm_adj_house, norm_adj_permits, norm_adj_pce_services, norm_adj_pce_nondurable, norm_adj_pce_durable,
@@ -498,7 +540,10 @@ vars=[norm_adj_participation_rate, norm_adj_prime_rate, norm_adj_consumer_credit
     norm_adj_cpi, norm_adj_earnings, norm_adj_exports, norm_adj_imports, norm_adj_bus_loans, norm_adj_part_time,
     norm_adj_trans_receipt, nomr_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
 
-
+'''Variables to add:
+    Baker Highes US Rig Count
+    NFIB Small Business Index
+    '''
 
 for n in vars:
     df=df.join(n,how='outer') 
@@ -513,6 +558,11 @@ for col in pc.columns:
 pc = pc.ewm(halflife=1.5,min_periods=3).mean()
 x = pca_bc.explained_variance_ratio_
 print(f'Explained variation per principal component: {x}. Total explanatory power is {sum(x)}')
+
+#plt.plot(pc, label=pc.columns)
+#plt.legend()
+#plt.show()
+#exit()
 
 pc['BC'] = -pc['PC1']/3 + pc['PC2']/6 + -pc['PC3']/2
 pc['BC'] = sp.norm.cdf(pc['BC'], 0)
@@ -581,10 +631,11 @@ phases = pd.DataFrame({'Early_Expansion':ee, 'Late_Expansion':le,
 # =============================================================================
 #                            Sector Returns
 # =============================================================================
+
 def get_sector_etf_rets(tickers, sector_names, start):
     data = []
     for etf, name in zip(tickers, sector_names):
-        price = pdr.get_data_yahoo(etf, start=start, end=str(dateToday))['Adj Close']
+        price = yf.download(etf, start=start, end=str(dateToday))['Adj Close']
         price = price.resample('M').last().shift(periods=-1).dropna()
         rets = price.pct_change().dropna()
         rets = pd.DataFrame({name:rets})
@@ -608,7 +659,6 @@ for phase in phases.columns:
     phase_ir = ann_ret / ann_stdev
     phase_ir = pd.DataFrame({phase:phase_ir})
     phase_rets.append(phase_ir)
-    print('Still thinking...')
 phase_rets = phase_rets[0].join(phase_rets[1:])
 
 
@@ -628,8 +678,8 @@ def ir_charts(phases_bc, top_bottom):
 
 charts = ir_charts(phase_rets.columns, 3)
 plt.savefig(f'{location}/IR_Charts.png')        
-spy = pdr.get_data_yahoo('SPY', start='1998-12-16', end=str(dateToday))['Adj Close']
-spy = spy.resample('M').last()
+spy = yf.download('SPY', start='1998-12-16', end=str(dateToday))['Adj Close']
+spy = spy.resample('M').last().shift(periods=-1).dropna()
 spy = spy.pct_change().dropna()
 spy_tr = spy / (np.std(spy) * np.sqrt(12) * 100)
 plt.clf()
@@ -699,7 +749,7 @@ lastmonth = (dateToday - relativedelta(months=1)).strftime('%B %Y')
 pdf.drawString(50, 740, 'For the Month of ' + lastmonth)
 
 def get_index_rets(tickers, names):
-    index_rets = [pd.DataFrame({name:pdr.get_data_yahoo(ticker, start=str(dateToday - relativedelta(years=1)),
+    index_rets = [pd.DataFrame({name:yf.download(ticker, start=str(dateToday - relativedelta(years=1)),
                                       end=str(end_date))['Adj Close']}) for name, ticker in zip(names, tickers)]
     index_rets = index_rets[0].join(index_rets[1:])
     index_rets = index_rets.pct_change().dropna()
