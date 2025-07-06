@@ -77,8 +77,8 @@ norm_adj_bank_credit.columns = ['Bank Credit']
 vehicle_loans = pdr.get_data_fred('DTBOVLRXDFBANA', start='1959-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
 vehicle_loans = vehicle_loans.resample('M').last()
 adj_vehicle_loans = fix_dates(vehicle_loans)
-nomr_adj_vehicle_loans = zscore(adj_vehicle_loans)
-nomr_adj_vehicle_loans.columns = ['Motor Vehicle Loans']
+norm_adj_vehicle_loans = zscore(adj_vehicle_loans)
+norm_adj_vehicle_loans.columns = ['Motor Vehicle Loans']
 
 #Transfer Receipts
 trans_receipt = pdr.get_data_fred('B931RC1', start='1959-01-01', end=end_of_month(dateToday - relativedelta(months=1)))
@@ -538,7 +538,7 @@ vars=[norm_adj_sentiment, norm_adj_sticky, norm_adj_vix, norm_adj_policy, norm_a
     norm_adj_man_ind_prod, norm_adj_all_ind_prod, norm_adj_fixed_mortgage, norm_adj_crude, norm_adj_copper,
     norm_adj_beef, norm_adj_wheat, norm_adj_bbb_spread, norm_adj_aaa_spread, norm_adj_pp, norm_adj_man_conf,
     norm_adj_cpi, norm_adj_earnings, norm_adj_exports, norm_adj_imports, norm_adj_bus_loans, norm_adj_part_time,
-    norm_adj_trans_receipt, nomr_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
+    norm_adj_trans_receipt, norm_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
 
 '''Variables to add:
     Baker Highes US Rig Count
