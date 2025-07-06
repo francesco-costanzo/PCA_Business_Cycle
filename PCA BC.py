@@ -1047,7 +1047,7 @@ elif tr_1 == False:
     pdf.drawImage(f'{location}/SectorIRs.png', -10 , 3, 590, 290)
     pdf.setFontSize(10)
     pdf.drawString(45, 309, 'Note: Green bars denote sectors with long position, red short, and grey neutral.')
-    pdf.drawString(45, 296, 'Sector returns based on SPDR Sector ETF returns from 1999-01-31 to ' + eolastmonth.strftime('%Y-%m-%d'))
+    pdf.drawString(45, 296, 'Sector returns based on SPDR Sector ETF returns from 1999-01-31 to ' + end_date.strftime('%Y-%m-%d'))
     pdf.line(35, 291, 560, 291)
     pdf.setFontSize(18)
     pdf.drawString(45, 264, 'Sector Strategy Cumulative Returns')
