@@ -1,0 +1,8 @@
+pandas
+pandas_datareader
+reportlab
+matplotlib
+numpy
+scipy
+scikit-learn
+yfinance
