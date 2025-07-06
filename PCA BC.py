@@ -541,9 +541,9 @@ vars=[norm_adj_sentiment, norm_adj_sticky, norm_adj_vix, norm_adj_policy, norm_a
     norm_adj_trans_receipt, nomr_adj_vehicle_loans, norm_adj_bank_credit, norm_adj_personal_savings]
 
 '''Variables to add:
-    Baker Highes US Rig Count
+    Baker Hughes US Rig Count
     NFIB Small Business Index
-    '''
+'''
 
 for n in vars:
     df=df.join(n,how='outer') 
